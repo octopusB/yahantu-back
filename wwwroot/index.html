@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>实时压焓图</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div><span class="eyebrow">REFRIGERATION MONITOR</span><h1>实时压焓图</h1></div>
+      <label>冷媒类型 <select id="refrigerant"></select></label>
+    </header>
+    <aside>当前为模拟传感器与近似焓值，仅供软件联调，不可用于设备选型或安全控制。</aside>
+    <section class="chart-card">
+      <canvas id="chart"></canvas>
+      <div id="empty">正在等待采样…</div>
+    </section>
+    <section id="cards" class="cards"></section>
+    <footer>横轴：比焓 h (kJ/kg) · 纵轴：绝对压力 P (MPa，对数坐标) · <span id="updated">--</span></footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
+
