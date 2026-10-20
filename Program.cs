@@ -3,7 +3,7 @@ using Yahantu.PHDiagram;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<DiagramState>();
 builder.Services.AddSingleton<ISensorDataSource, DemoSensorDataSource>();
-builder.Services.AddSingleton<IRefrigerantPropertyCalculator, DemoRefrigerantPropertyCalculator>();
+builder.Services.AddSingleton<IRefrigerantPropertyCalculator, CoolPropPropertyCalculator>();
 builder.Services.AddHostedService<SamplingWorker>();
 
 var app = builder.Build();
@@ -23,4 +23,3 @@ app.MapPost("/api/refrigerant", (SetRefrigerantRequest request, DiagramState sta
 
 app.MapFallbackToFile("index.html");
 app.Run();
-

@@ -12,15 +12,16 @@
       <div><span class="eyebrow">REFRIGERATION MONITOR</span><h1>实时压焓图</h1></div>
       <label>冷媒类型 <select id="refrigerant"></select></label>
     </header>
-    <aside>当前为模拟传感器与近似焓值，仅供软件联调，不可用于设备选型或安全控制。</aside>
+    <aside>测点暂由模拟接口提供；焓值、饱和曲线和标准循环均由 CoolProp HEOS 状态方程计算。现场压力必须使用绝对压力。</aside>
+    <div id="error" class="error" hidden></div>
     <section class="chart-card">
       <canvas id="chart"></canvas>
       <div id="empty">正在等待采样…</div>
     </section>
-    <section id="cards" class="cards"></section>
-    <footer>横轴：比焓 h (kJ/kg) · 纵轴：绝对压力 P (MPa，对数坐标) · <span id="updated">--</span></footer>
+    <p id="conditions" class="conditions"></p>
+    <section class="table-card"><table><thead><tr><th>系列</th><th>状态点</th><th>T (°C)</th><th>P (MPa abs)</th><th>lgP</th><th>h (kJ/kg)</th></tr></thead><tbody id="values"></tbody></table></section>
+    <footer>物性后端：<span id="backend">--</span> · 更新时间：<span id="updated">--</span></footer>
   </main>
   <script src="app.js"></script>
 </body>
 </html>
-
