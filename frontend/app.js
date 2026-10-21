@@ -40,7 +40,7 @@ function render(data){
   chart.setOption(option,{notMerge:true,lazyUpdate:true});
 }
 function readInteractionState(){
-  const option=chart.getOption();
+  const option=chart.getOption()||{};
   const zoom=option.dataZoom&&option.dataZoom[0];
   return{
     legend:option.legend&&option.legend[0]&&option.legend[0].selected,
