@@ -5,10 +5,11 @@ builder.Services.AddSingleton<DiagramState>();
 builder.Services.AddSingleton<ISensorDataSource, DemoSensorDataSource>();
 builder.Services.AddSingleton<IRefrigerantPropertyCalculator, CoolPropPropertyCalculator>();
 builder.Services.AddHostedService<SamplingWorker>();
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();
-app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseCors();
 
 app.MapGet("/api/diagram", (DiagramState state) => Results.Ok(state.GetSnapshot()));
 app.MapGet("/api/refrigerants", (IRefrigerantPropertyCalculator calculator) => Results.Ok(calculator.SupportedRefrigerants));
@@ -21,5 +22,4 @@ app.MapPost("/api/refrigerant", (SetRefrigerantRequest request, DiagramState sta
     return Results.Ok(state.GetSnapshot());
 });
 
-app.MapFallbackToFile("index.html");
 app.Run();

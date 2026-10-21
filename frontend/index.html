@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>冷媒压焓图</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div><span class="eyebrow">REFRIGERATION ANALYSIS</span><h1>冷媒压焓图</h1><p>CoolProp 标准曲线与实时循环对比</p></div>
+      <div id="connectionState" class="state offline">未连接</div>
+    </header>
+
+    <section class="toolbar" aria-label="连接与图表设置">
+      <label class="wide">后端地址<input id="apiBase" value="http://localhost:5000" spellcheck="false"></label>
+      <button id="connect" type="button">连接</button>
+      <label>冷媒<select id="refrigerant" disabled><option>--</option></select></label>
+      <label class="check"><input id="autoRefresh" type="checkbox" checked> 每秒刷新</label>
+      <label>图宽 <output id="widthValue">100%</output><input id="chartWidth" type="range" min="55" max="100" value="100"></label>
+      <label>图高 <output id="heightValue">620px</output><input id="chartHeight" type="range" min="380" max="900" step="20" value="620"></label>
+    </section>
+
+    <div id="message" class="message">请启动 C# 接口服务，然后点击“连接”。</div>
+    <section id="chartShell" class="chart-shell"><div id="chart" role="img" aria-label="lgP-h 压焓图"></div></section>
+    <p id="conditions" class="conditions"></p>
+    <section class="table-card"><table><thead><tr><th>系列</th><th>状态点</th><th>T (°C)</th><th>P (MPa abs)</th><th>lgP</th><th>h (kJ/kg)</th></tr></thead><tbody id="values"></tbody></table></section>
+    <footer>滚轮缩放 · 鼠标拖动平移 · 悬停查看点数据 · 工具栏可框选、还原和保存图片<br>物性后端：<span id="backend">--</span> · 更新时间：<span id="updated">--</span></footer>
+  </main>
+  <script src="vendor/echarts.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+

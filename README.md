@@ -1,6 +1,6 @@
 # Yahantu 压焓图
 
-.NET 8 后端持续获取温度与压力，使用 CoolProp HEOS 状态方程计算压焓点；HTML 前端每秒刷新并使用 Canvas 绘制标准 `lgP-h` 图。
+.NET 8 后端仅提供 JSON API，持续获取温度与压力并使用 CoolProp HEOS 状态方程计算压焓点。独立前端位于 `frontend/`，无需 Web 服务器，直接双击 `frontend/index.html` 即可运行。
 
 图中包括：
 
@@ -15,14 +15,16 @@
 dotnet run
 ```
 
-打开终端显示的地址。页面可切换 R410A、R134a、R32 和 R22。
+后端默认监听地址以终端输出为准。直接打开 `frontend/index.html`，填写后端地址并点击“连接”。页面可切换 R410A、R134a、R32 和 R22。
+
+前端使用本地 ECharts 文件，支持悬停查看状态点、滚轮缩放、拖动平移、框选缩放、图例开关、还原、导出图片以及手动调整图表宽高。后端已开放 CORS，使 `file://` 打开的页面可以调用接口。
 
 ## 安装 CoolProp
 
 项目通过 CoolProp 官方共享库的 C API (`PropsSI`/`Props1SI`) 调用 CoolProp 8：
 
 1. 从 [CoolProp 官方发布页](https://github.com/CoolProp/CoolProp/releases) 获取与系统和进程架构一致的共享库。
-2. Windows 将 `CoolProp.dll` 放在应用输出目录或系统 `PATH`；Linux 使用 `libCoolProp.so`，macOS 使用 `libCoolProp.dylib`。
+2. Windows 将 `CoolProp.dll` 放入 `native/win-x64/`，项目会自动复制到输出和发布目录；也可放入系统 `PATH`。Linux 使用 `libCoolProp.so`，macOS 使用 `libCoolProp.dylib`。
 3. 确保应用与原生库架构一致（例如均为 x64），再运行 `dotnet run`。
 
 如果拥有 NIST REFPROP 许可，也可把 `Services.cs` 中的 `HEOS::` 改为 `REFPROP::`，并按 CoolProp 官方 REFPROP 后端说明配置 REFPROP 库路径。REFPROP 本身不随本项目分发。

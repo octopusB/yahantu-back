@@ -4,11 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-	<ItemGroup>
-		<None Include="native\win-x64\CoolProp.dll"
-			  Link="CoolProp.dll"
-			  CopyToOutputDirectory="PreserveNewest"
-			  CopyToPublishDirectory="PreserveNewest"/>
-	</ItemGroup>
+  <ItemGroup Condition="Exists('native/win-x64/CoolProp.dll')">
+    <None Include="native/win-x64/CoolProp.dll" Link="CoolProp.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
-
