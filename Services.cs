@@ -1,4 +1,7 @@
 using System.Runtime.InteropServices;
+using System.Globalization;
+using System.Net.Http.Json;
+using Microsoft.Extensions.Options;
 
 namespace Yahantu.PHDiagram;
 
@@ -39,22 +42,48 @@ public sealed class DiagramState
     public DiagramSnapshot GetSnapshot() { lock (_sync) return _snapshot; }
 }
 
-public sealed class DemoSensorDataSource : ISensorDataSource
+public sealed class HttpSensorDataSource(HttpClient client, IOptions<SensorApiOptions> options) : ISensorDataSource
 {
-    private int _sample;
-    public Task<IReadOnlyList<SensorReading>> ReadAsync(CancellationToken cancellationToken)
+    private readonly SensorApiOptions _options = options.Value;
+
+    public async Task<IReadOnlyList<SensorReading>> ReadAsync(CancellationToken cancellationToken)
     {
-        // TODO: 用现场接口替换此实现；压力必须换算为绝对压力 MPa。
-        var phase = Interlocked.Increment(ref _sample) * .18;
-        var now = DateTimeOffset.UtcNow;
-        IReadOnlyList<SensorReading> readings = new[]
+        var response = await client.GetFromJsonAsync<SensorApiResponse>(_options.Url, cancellationToken)
+            ?? throw new InvalidDataException("测量接口返回空响应。");
+        if (!string.Equals(response.Status, "Success", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException($"测量接口状态异常：{response.Status ?? "未提供状态"}。");
+        if (response.Temperatures is null || response.Temperatures.Length < 4)
+            throw new InvalidDataException("测量接口 Temperatures 至少需要 4 个数值。");
+        if (response.Pressures is null || response.Pressures.Length < 4)
+            throw new InvalidDataException("测量接口 Pressures 至少需要 4 个数值。");
+
+        var timestamp = ParseTimestamp(response.UpdateTime);
+        var points = new SensorReading[4];
+        for (var i = 0; i < points.Length; i++)
         {
-            new SensorReading("1 吸气", 10 + Math.Sin(phase), .72 + Math.Sin(phase) * .012, now),
-            new SensorReading("2 排气", 76 + Math.Sin(phase * .7) * 2, 2.65 + Math.Sin(phase * .8) * .035, now),
-            new SensorReading("3 冷凝器出口", 40 + Math.Sin(phase * .6), 2.58 + Math.Sin(phase * .8) * .035, now),
-            new SensorReading("4 蒸发器入口", 5 + Math.Sin(phase * .9), .76 + Math.Sin(phase) * .012, now)
-        };
-        return Task.FromResult(readings);
+            var temperature = response.Temperatures[i];
+            var pressure = ToAbsoluteMpa(response.Pressures[i]);
+            if (!double.IsFinite(temperature) || !double.IsFinite(pressure) || pressure <= 0)
+                throw new InvalidDataException($"测点 {i + 1} 的温度或压力无效。");
+            points[i] = new SensorReading($"实测点{i + 1}", temperature, pressure, timestamp);
+        }
+        return points;
+    }
+
+    private double ToAbsoluteMpa(double value) => _options.PressureUnit.Trim().ToLowerInvariant() switch
+    {
+        "bar-gauge" => (value + _options.AtmosphericPressureBar) / 10d,
+        "bar-absolute" => value / 10d,
+        "mpa-gauge" => value + _options.AtmosphericPressureBar / 10d,
+        "mpa-absolute" => value,
+        _ => throw new InvalidDataException($"不支持压力单位配置：{_options.PressureUnit}。")
+    };
+
+    private static DateTimeOffset ParseTimestamp(string? value)
+    {
+        if (DateTime.TryParseExact(value, "yyyy-MM-dd-HH-mm-ss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var result))
+            return new DateTimeOffset(result);
+        return DateTimeOffset.Now;
     }
 }
 
@@ -158,4 +187,3 @@ public sealed class SamplingWorker(ISensorDataSource sensor, IRefrigerantPropert
         } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 }
-

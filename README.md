@@ -31,9 +31,17 @@ dotnet run
 
 ## 接入真实数据
 
-1. 新建类实现 `ISensorDataSource.ReadAsync`，从已有接口返回各测点的温度（°C）和绝对压力（MPa）。
-2. 在 `Program.cs` 中把 `DemoSensorDataSource` 替换为该实现。
-3. 当前物性实现是 `CoolPropPropertyCalculator`；若使用厂商服务，只需实现同一个 `IRefrigerantPropertyCalculator` 接口并替换依赖注入注册。
+后端当前每秒读取 `http://10.1.20.80:8080/api/data`，取 `Temperatures` 和 `Pressures` 的前四项，按相同数组下标组成实测点 1–4。接口地址和压力单位位于 `appsettings.json`。
+
+当前按 `bar-gauge`（bar 表压）处理压力，并使用 `AtmosphericPressureBar` 转换为绝对 MPa：
+
+```text
+P_abs_MPa = (P_gauge_bar + 1.01325) / 10
+```
+
+支持的 `PressureUnit` 配置值为 `bar-gauge`、`bar-absolute`、`mpa-gauge` 和 `mpa-absolute`。确认现场协议后必须选择正确单位；返回值中的 `0.0` 不能直接作为绝对压力用于 `lgP` 和 CoolProp 计算。
+
+当前物性实现是 `CoolPropPropertyCalculator`；若使用厂商服务，只需实现同一个 `IRefrigerantPropertyCalculator` 接口并替换依赖注入注册。
 
 接口压力必须是绝对压力 MPa。如果现场提供表压，需先加当地大气压再传入，否则焓值和 `lgP` 都会错误。物性计算不能替代设备保护与现场安全控制。
 

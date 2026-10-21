@@ -2,7 +2,9 @@ using Yahantu.PHDiagram;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<DiagramState>();
-builder.Services.AddSingleton<ISensorDataSource, DemoSensorDataSource>();
+builder.Services.Configure<SensorApiOptions>(builder.Configuration.GetSection("SensorApi"));
+builder.Services.AddHttpClient<ISensorDataSource, HttpSensorDataSource>(client =>
+    client.Timeout = TimeSpan.FromSeconds(5));
 builder.Services.AddSingleton<IRefrigerantPropertyCalculator, CoolPropPropertyCalculator>();
 builder.Services.AddHostedService<SamplingWorker>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
