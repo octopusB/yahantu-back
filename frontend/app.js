@@ -32,7 +32,20 @@ function resizeChart(width,height){if(width){$('#chartShell').style.width=`${wid
 function render(data){
   $('#refrigerant').value=data.refrigerant;$('#backend').textContent=data.propertyBackend;$('#updated').textContent=new Date(data.updatedAt).toLocaleTimeString();
   const c=data.conditions;$('#conditions').textContent=`标准工况：蒸发 ${c.evaporatingTemperatureC} °C / 冷凝 ${c.condensingTemperatureC} °C / 过热 ${c.superheatK} K / 过冷 ${c.subcoolingK} K`;
-  renderTable(data);chart.setOption(buildOption(data),true);
+  renderTable(data);
+  const view=readInteractionState();
+  const option=buildOption(data);
+  if(view.legend)option.legend.selected=view.legend;
+  if(view.zoom)option.dataZoom.forEach(item=>Object.assign(item,view.zoom));
+  chart.setOption(option,{notMerge:true,lazyUpdate:true});
+}
+function readInteractionState(){
+  const option=chart.getOption();
+  const zoom=option.dataZoom&&option.dataZoom[0];
+  return{
+    legend:option.legend&&option.legend[0]&&option.legend[0].selected,
+    zoom:zoom?{start:zoom.start,end:zoom.end}:null
+  };
 }
 function point(p){return{value:[p.enthalpyKjKg,p.logPressure,p.temperatureC,p.pressureMpa],name:p.pointName}}
 function curvePoint(p,name){return{value:[p.enthalpyKjKg,p.logPressure,p.temperatureC,p.pressureMpa],name}}
@@ -49,10 +62,10 @@ function buildOption(data){
     yAxis:{type:'value',name:'lg P（P: MPa 绝对压力）',nameLocation:'middle',nameGap:52,scale:true,axisLine:{lineStyle:{color:'#607d8b'}},axisLabel:{color:'#8fa5b1'},splitLine:{lineStyle:{color:'#1b3443'}}},
     dataZoom:[{type:'inside',xAxisIndex:0,yAxisIndex:0,filterMode:'none',zoomOnMouseWheel:true,moveOnMouseMove:true},{type:'slider',xAxisIndex:0,height:18,bottom:18,borderColor:'#294554',fillerColor:'#2d7c8055',textStyle:{color:'#8fa5b1'}}],
     series:[
-      {name:'饱和液线',type:'line',showSymbol:false,smooth:.15,lineStyle:{width:2},data:data.saturatedLiquid.map((p,i)=>curvePoint(p,`饱和液 ${i+1}`))},
-      {name:'饱和蒸汽线',type:'line',showSymbol:false,smooth:.15,lineStyle:{width:2},data:data.saturatedVapor.map((p,i)=>curvePoint(p,`饱和汽 ${i+1}`))},
-      {name:'标准循环',type:'line',symbol:'diamond',symbolSize:10,lineStyle:{width:2,type:'dashed'},data:[...standard,standard[0]].filter(Boolean)},
-      {name:'实测循环',type:'line',symbol:'circle',symbolSize:12,lineStyle:{width:3},itemStyle:{borderColor:'#fff',borderWidth:1},data:[...measured,measured[0]].filter(Boolean)}
+      {id:'saturation-liquid',name:'饱和液线',type:'line',showSymbol:false,smooth:.15,lineStyle:{width:2},data:data.saturatedLiquid.map((p,i)=>curvePoint(p,`饱和液 ${i+1}`))},
+      {id:'saturation-vapor',name:'饱和蒸汽线',type:'line',showSymbol:false,smooth:.15,lineStyle:{width:2},data:data.saturatedVapor.map((p,i)=>curvePoint(p,`饱和汽 ${i+1}`))},
+      {id:'standard-cycle',name:'标准循环',type:'line',symbol:'diamond',symbolSize:10,lineStyle:{width:2,type:'dashed'},data:[...standard,standard[0]].filter(Boolean)},
+      {id:'measured-cycle',name:'实测循环',type:'line',symbol:'circle',symbolSize:12,lineStyle:{width:3},itemStyle:{borderColor:'#fff',borderWidth:1},data:[...measured,measured[0]].filter(Boolean)}
     ]
   };
 }
@@ -61,4 +74,3 @@ function renderTable(data){
   $('#values').innerHTML=rows(data.measuredPoints,'measured','M')+rows(data.standardCycle,'standard','S');
 }
 function escapeHtml(value){const el=document.createElement('span');el.textContent=String(value);return el.innerHTML}
-
