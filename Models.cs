@@ -2,7 +2,7 @@ namespace Yahantu.PHDiagram;
 
 public sealed class SensorApiOptions
 {
-    public string Url { get; set; } = "http://10.1.20.80:8080/api/data";
+    public string Url { get; set; } = "http://10.1.2.80:8080/api/data";
     public string PressureUnit { get; set; } = "bar-gauge";
     public double AtmosphericPressureBar { get; set; } = 1.01325;
 }

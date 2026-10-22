@@ -31,7 +31,7 @@ dotnet run
 
 ## 接入真实数据
 
-后端当前每秒读取 `http://10.1.20.80:8080/api/data`，取 `Temperatures` 和 `Pressures` 的前四项，按相同数组下标组成实测点 1–4。接口地址和压力单位位于 `appsettings.json`。
+后端当前每秒读取 `http://10.1.2.80:8080/api/data`，取 `Temperatures` 和 `Pressures` 的前四项，按相同数组下标组成实测点 1–4。接口地址和压力单位位于 `appsettings.json`。
 
 当前按 `bar-gauge`（bar 表压）处理压力，并使用 `AtmosphericPressureBar` 转换为绝对 MPa：
 
