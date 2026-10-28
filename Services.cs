@@ -92,7 +92,33 @@ public sealed class CoolPropPropertyCalculator : IRefrigerantPropertyCalculator
     private static readonly string[] Fluids = { "R407C", "R410A", "R134A", "R32", "R22" };
     public IReadOnlyCollection<string> SupportedRefrigerants => Fluids;
     public string BackendName => "CoolProp HEOS (PropsSI)";
-    public double CalculateEnthalpy(string refrigerant, double temperatureC, double absolutePressureMpa) => ToKiloJoules(Props("Hmass", "T", ToKelvin(temperatureC), "P", ToPascal(absolutePressureMpa), Fluid(refrigerant)));
+    public double CalculateEnthalpy(string refrigerant, double temperatureC, double absolutePressureMpa)
+    {
+        var fluid = Fluid(refrigerant);
+        var temperatureK = ToKelvin(temperatureC);
+        var pressurePa = ToPascal(absolutePressureMpa);
+        double enthalpy;
+        if (TryProps("Hmass", "T", temperatureK, "P", pressurePa, fluid, out enthalpy))
+            return ToKiloJoules(enthalpy);
+
+        // R407C 等非共沸混合物在泡点与露点之间存在温度滑移。
+        // CoolProp 不支持伪纯流体的两相 T/P 闪蒸，因此按温度在滑移区间内的位置估算干度，
+        // 再使用 P/Q 计算焓。该估算仅用于只有温度、压力测量值时的实时绘图。
+        var bubbleK = Props("T", "P", pressurePa, "Q", 0, fluid);
+        var dewK = Props("T", "P", pressurePa, "Q", 1, fluid);
+        var lowerK = Math.Min(bubbleK, dewK);
+        var upperK = Math.Max(bubbleK, dewK);
+        const double toleranceK = .05;
+        if (temperatureK < lowerK - toleranceK || temperatureK > upperK + toleranceK)
+            throw new InvalidOperationException($"CoolProp 无法计算 {fluid} 在 {temperatureC:F2} °C、{absolutePressureMpa:F4} MPa(abs) 下的 Hmass。");
+
+        var glideK = upperK - lowerK;
+        if (glideK < 1e-6)
+            throw new InvalidOperationException($"{fluid} 的测点位于饱和线上，仅凭温度和压力无法确定两相干度及焓值。");
+
+        var quality = Math.Clamp((temperatureK - bubbleK) / (dewK - bubbleK), 0, 1);
+        return ToKiloJoules(Props("Hmass", "P", pressurePa, "Q", quality, fluid));
+    }
 
     public PropertyDiagram BuildDiagram(string refrigerant)
     {
@@ -148,6 +174,11 @@ public sealed class CoolPropPropertyCalculator : IRefrigerantPropertyCalculator
         var result = CoolPropNative.PropsSI(output, input1, value1, input2, value2, fluid);
         if (!double.IsFinite(result) || Math.Abs(result) > 1e100) throw new InvalidOperationException($"CoolProp 无法计算 {fluid} 的 {output}。");
         return result;
+    }
+    private static bool TryProps(string output, string input1, double value1, string input2, double value2, string fluid, out double result)
+    {
+        result = CoolPropNative.PropsSI(output, input1, value1, input2, value2, fluid);
+        return double.IsFinite(result) && Math.Abs(result) <= 1e100;
     }
     private static double Props1(string fluid, string output)
     {
