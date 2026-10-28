@@ -19,8 +19,8 @@ public sealed class DiagramState
 {
     private static readonly StandardConditions DefaultConditions = new(5, 45, 5, 5);
     private readonly object _sync = new();
-    private string _refrigerant = "R410A";
-    private DiagramSnapshot _snapshot = new("R410A", "CoolProp HEOS", Array.Empty<DiagramPoint>(), Array.Empty<PropertyCurvePoint>(), Array.Empty<PropertyCurvePoint>(), Array.Empty<DiagramPoint>(), DefaultConditions, DateTimeOffset.MinValue, "等待 CoolProp 首次计算");
+    private string _refrigerant = "R407C";
+    private DiagramSnapshot _snapshot = new("R407C", "CoolProp HEOS", Array.Empty<DiagramPoint>(), Array.Empty<PropertyCurvePoint>(), Array.Empty<PropertyCurvePoint>(), Array.Empty<DiagramPoint>(), DefaultConditions, DateTimeOffset.MinValue, "等待 CoolProp 首次计算");
     public string GetRefrigerant() { lock (_sync) return _refrigerant; }
     public void SetRefrigerant(string refrigerant)
     {
@@ -89,7 +89,7 @@ public sealed class HttpSensorDataSource(HttpClient client, IOptions<SensorApiOp
 
 public sealed class CoolPropPropertyCalculator : IRefrigerantPropertyCalculator
 {
-    private static readonly string[] Fluids = { "R410A", "R134A", "R32", "R22" };
+    private static readonly string[] Fluids = { "R407C", "R410A", "R134A", "R32", "R22" };
     public IReadOnlyCollection<string> SupportedRefrigerants => Fluids;
     public string BackendName => "CoolProp HEOS (PropsSI)";
     public double CalculateEnthalpy(string refrigerant, double temperatureC, double absolutePressureMpa) => ToKiloJoules(Props("Hmass", "T", ToKelvin(temperatureC), "P", ToPascal(absolutePressureMpa), Fluid(refrigerant)));

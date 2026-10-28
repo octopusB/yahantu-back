@@ -15,7 +15,7 @@
 dotnet run
 ```
 
-后端默认监听地址以终端输出为准。直接打开 `frontend/index.html`，填写后端地址并点击“连接”。页面可切换 R410A、R134a、R32 和 R22。
+后端默认监听地址以终端输出为准。直接打开 `frontend/index.html`，填写后端地址并点击“连接”。页面默认展示 R407C，并可切换 R410A、R134a、R32 和 R22。
 
 前端使用本地 ECharts 文件，支持悬停查看状态点、滚轮缩放、拖动平移、框选缩放、图例开关、还原、导出图片以及手动调整图表宽高。后端已开放 CORS，使 `file://` 打开的页面可以调用接口。
 
@@ -48,5 +48,5 @@ P_abs_MPa = (P_gauge_bar + 1.01325) / 10
 ## API
 
 - `GET /api/refrigerants`：支持的冷媒列表。
-- `POST /api/refrigerant`：设置冷媒，例如 `{ "refrigerant": "R410A" }`。
+- `POST /api/refrigerant`：设置冷媒，例如 `{ "refrigerant": "R407C" }`。
 - `GET /api/diagram`：当前冷媒和最新压焓点。
